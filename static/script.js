@@ -1,41 +1,53 @@
 document.addEventListener('DOMContentLoaded', function () {
-    const toolCards = document.querySelectorAll('.tool-card');
-    const chatContainer = document.getElementById('chat-container');
     const chatMessages = document.getElementById('chat-messages');
     const userInput = document.getElementById('user-input');
     const sendButton = document.getElementById('send-button');
+    const featureItems = document.querySelectorAll('.feature-item');
 
-    // Animación de entrada
-    toolCards.forEach((card, index) => {
-        card.style.opacity = 0;
-        card.style.transform = 'translateY(20px)';
+    // Update initial message timestamp
+    const initialTimestamp = document.querySelector('.message.system .timestamp');
+    if (initialTimestamp) {
+        initialTimestamp.textContent = formatDate(new Date());
+    }
 
-        setTimeout(() => {
-            card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
-            card.style.opacity = 1;
-            card.style.transform = 'translateY(0)';
-        }, index * 100);
-    });
+    // Auto focus on input
+    userInput.focus();
 
-    // Manejo de clics en las tarjetas
-    toolCards.forEach(card => {
-        card.addEventListener('click', function () {
-            const toolName = this.querySelector('h3').textContent;
-            showChatInterface(toolName);
+    // Visual effects on feature options
+    featureItems.forEach(item => {
+        item.addEventListener('click', function() {
+            featureItems.forEach(i => i.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Visual selection effect
+            const text = this.querySelector('span').textContent;
+            addSystemMessage(`You've selected the feature: ${text}. How can I assist you?`);
         });
     });
 
-    // Mostrar interfaz de chat
-    function showChatInterface(toolName) {
-        chatContainer.classList.remove('hidden');
-        chatContainer.classList.add('visible');
-        addMessage('system', `Has seleccionado: ${toolName}. ¿En qué puedo ayudarte?`);
-    }
+    // Auto-resize textarea up to a maximum height
+    userInput.addEventListener('input', function() {
+        // Reset height to get the correct scrollHeight
+        this.style.height = '42px';
+        
+        // Calculate new height based on content up to max-height
+        const newHeight = Math.min(this.scrollHeight, 120);
+        this.style.height = newHeight + 'px';
+        
+        // Show scrollbar only when needed
+        if (this.scrollHeight > 120) {
+            this.style.overflowY = 'auto';
+        } else {
+            this.style.overflowY = 'hidden';
+        }
+        
+        // Reset scroll position if empty
+        if (this.value.length === 0) {
+            this.scrollTop = 0;
+        }
+    });
 
-    // Foco automático en el input al cargar
-    userInput.focus();
-
-    // Enviar mensaje
+    // Send message
     sendButton.addEventListener('click', sendMessage);
     userInput.addEventListener('keypress', function(e) {
         if (e.key === 'Enter' && !e.shiftKey) {
@@ -47,19 +59,26 @@ document.addEventListener('DOMContentLoaded', function () {
     async function sendMessage() {
         const message = userInput.value.trim();
         if (message) {
-            // Obtener hora actual para el mensaje
+            // Format current time
             const now = new Date();
-            const timeString = now.getHours() + ':' + 
-                (now.getMinutes() < 10 ? '0' : '') + now.getMinutes();
+            const timeString = formatDate(now);
             
-            // Añadir mensaje del usuario al chat
+            // Add user message
             addUserMessage(message, timeString);
-            userInput.value = '';
             
-            // Mostrar indicador de escritura
+            // Reset and focus the textarea
+            userInput.value = '';
+            userInput.style.height = '42px';
+            userInput.focus();
+            
+            // Show typing indicator
             showTypingIndicator();
             
+            // Thinking time simulator
+            const thinkingTime = 1000 + Math.random() * 2000;
+            
             try {
+                // Call API
                 const response = await fetch('/api/chat', {
                     method: 'POST',
                     headers: {
@@ -70,20 +89,25 @@ document.addEventListener('DOMContentLoaded', function () {
                     })
                 });
 
-                // Eliminar indicador de escritura
+                // Wait minimum thinking time
+                await new Promise(resolve => setTimeout(resolve, thinkingTime));
+                
+                // Remove indicator
                 removeTypingIndicator();
 
                 if (!response.ok) {
-                    throw new Error('Error en la respuesta del servidor');
+                    throw new Error('Error in server response');
                 }
 
                 const data = await response.json();
                 addSystemMessage(data.response);
+                
+                // Sound effect (optional)
+                playMessageSound();
             } catch (error) {
-                // Eliminar indicador de escritura en caso de error
                 removeTypingIndicator();
                 console.error('Error:', error);
-                addSystemMessage('Lo siento, ha ocurrido un error. Por favor, intenta de nuevo.');
+                addSystemMessage('Sorry, a system error has occurred. Please try again.');
             }
         }
     }
@@ -91,17 +115,12 @@ document.addEventListener('DOMContentLoaded', function () {
     function addUserMessage(content, time) {
         const messageHTML = `
             <div class="message user">
-                <div class="message-avatar">
-                    <i class="fas fa-user"></i>
+                <div class="message-header">
+                    <span class="sender">USER</span>
+                    <span class="timestamp">${time}</span>
                 </div>
                 <div class="message-content">
-                    <div class="message-header">
-                        <span class="message-sender">Tú</span>
-                        <span class="message-time">${time}</span>
-                    </div>
-                    <div class="message-text">
-                        ${content}
-                    </div>
+                    <p>${content}</p>
                 </div>
             </div>
         `;
@@ -110,24 +129,17 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function addSystemMessage(content) {
-        // Obtener hora actual
         const now = new Date();
-        const timeString = now.getHours() + ':' + 
-            (now.getMinutes() < 10 ? '0' : '') + now.getMinutes();
+        const timeString = formatDate(now);
         
         const messageHTML = `
             <div class="message system">
-                <div class="message-avatar">
-                    <i class="fas fa-scale-balanced"></i>
+                <div class="message-header">
+                    <span class="sender">SYSTEM</span>
+                    <span class="timestamp">${timeString}</span>
                 </div>
                 <div class="message-content">
-                    <div class="message-header">
-                        <span class="message-sender">Legal Guardian</span>
-                        <span class="message-time">${timeString}</span>
-                    </div>
-                    <div class="message-text">
-                        ${content}
-                    </div>
+                    <p>${content}</p>
                 </div>
             </div>
         `;
@@ -138,11 +150,12 @@ document.addEventListener('DOMContentLoaded', function () {
     function showTypingIndicator() {
         const typingHTML = `
             <div class="message system" id="typing-indicator">
-                <div class="message-avatar">
-                    <i class="fas fa-scale-balanced"></i>
+                <div class="message-header">
+                    <span class="sender">SYSTEM</span>
+                    <span class="timestamp">${formatDate(new Date())}</span>
                 </div>
                 <div class="message-content">
-                    <div class="message-text typing-indicator">
+                    <div class="typing-indicator">
                         <span></span>
                         <span></span>
                         <span></span>
@@ -163,5 +176,22 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function scrollToBottom() {
         chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+    
+    function formatTime(date) {
+        const hours = date.getHours().toString().padStart(2, '0');
+        const minutes = date.getMinutes().toString().padStart(2, '0');
+        return `${hours}:${minutes}`;
+    }
+    
+    function formatDate(date) {
+        const hours = date.getHours().toString().padStart(2, '0');
+        const minutes = date.getMinutes().toString().padStart(2, '0');
+        return `${hours}:${minutes}`;
+    }
+    
+    function playMessageSound() {
+        // This function is prepared to implement sounds
+        // if desired in the future
     }
 }); 
