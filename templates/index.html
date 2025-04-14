@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Legal Guardian</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+</head>
+<body>
+    <div class="sidebar">
+        <div class="logo">
+            <i class="fas fa-scale-balanced"></i>
+            <h1>Legal<span>Guardian</span></h1>
+        </div>
+        <div class="sidebar-info">
+            <p><i class="fas fa-shield-alt"></i> Tu asistente legal IA</p>
+            <p><i class="fas fa-lock"></i> Consultas privadas y seguras</p>
+            <p><i class="fas fa-book"></i> Basado en legislación actualizada</p>
+        </div>
+        <div class="legal-image"></div>
+    </div>
+
+    <main class="main-content">
+        <div class="chat-header">
+            <h2><i class="fas fa-comment-alt"></i> Consulta Jurídica</h2>
+            <p>Realiza cualquier consulta legal y obtén respuestas profesionales al instante</p>
+        </div>
+
+        <div class="chat-container">
+            <div class="chat-messages" id="chat-messages">
+                <div class="message system">
+                    <div class="message-avatar">
+                        <i class="fas fa-scale-balanced"></i>
+                    </div>
+                    <div class="message-content">
+                        <div class="message-header">
+                            <span class="message-sender">Legal Guardian</span>
+                            <span class="message-time">Ahora</span>
+                        </div>
+                        <div class="message-text">
+                            Bienvenido a Legal Guardian. Soy tu asistente jurídico virtual. ¿En qué asunto legal puedo ayudarte hoy?
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="input-container">
+                <textarea id="user-input" placeholder="Escribe tu consulta legal aquí..."></textarea>
+                <button id="send-button">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html> 
