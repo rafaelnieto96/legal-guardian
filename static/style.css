@@ -120,17 +120,24 @@ canvas {
 }
 
 .glass-button-primary {
-    background: var(--glass-bg);
-    backdrop-filter: blur(var(--glass-blur));
-    -webkit-backdrop-filter: blur(var(--glass-blur));
-    border: 1px solid var(--primary-light);
+    background: var(--accent-gradient);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--body-font);
+    font-size: 0.9rem;
     transition: all 0.3s ease;
+    margin-top: 12px;
 }
 
 .glass-button-primary:hover {
-    background: var(--primary-light);
-    color: white;
     transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255, 140, 0, 0.4);
 }
 
 /* Container and Main Layout */
@@ -769,4 +776,23 @@ header {
         justify-content: center;
         width: 100%;
     }
+}
+
+.glass-button-primary i {
+    font-size: 1rem;
+}
+
+.file-upload-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    font-size: 0.85rem;
+}
+
+.file-upload-indicator i {
+    color: var(--accent-color);
 }

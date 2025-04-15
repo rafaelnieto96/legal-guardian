@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,10 +9,12 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Roboto+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Roboto+Mono:wght@300;400;500;700&display=swap"
+        rel="stylesheet">
     <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js"></script>
 </head>
+
 <body>
     <div class="container">
         <header class="glass-header">
@@ -36,13 +39,9 @@
                             <i class="fas fa-file-contract"></i>
                             <span>Document Analysis</span>
                         </div>
-                        <div class="feature-item glass-item" data-feature="legal-search">
-                            <i class="fas fa-search"></i>
-                            <span>Legal Search</span>
-                        </div>
-                        <div class="feature-item glass-item" data-feature="text-generation">
+                        <div class="feature-item glass-item" data-feature="legal-templates">
                             <i class="fas fa-file-signature"></i>
-                            <span>Text Generation</span>
+                            <span>Legal Document Templates</span>
                         </div>
                     </div>
                     <div class="ai-status">
@@ -60,7 +59,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="main-chat glass-panel">
                     <div class="chat-messages" id="chat-messages">
                         <div class="message system">
@@ -69,14 +68,16 @@
                                 <span class="timestamp"><!-- Updated by JavaScript --></span>
                             </div>
                             <div class="message-content glass-message">
-                                <p>Welcome to the Legal Guardian system. I'm your AI legal assistant. How can I help you today?</p>
+                                <p>Welcome to the Legal Guardian system. I'm your AI legal assistant. How can I help you
+                                    today?</p>
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="chat-input-area">
                         <div class="input-flex-container">
-                            <textarea id="user-input" placeholder="Type your legal query or question here..." rows="1"></textarea>
+                            <textarea id="user-input" placeholder="Type your legal query or question here..."
+                                rows="1"></textarea>
                             <div class="input-controls">
                                 <button id="upload-button" title="Upload document">
                                     <i class="fas fa-file-upload"></i>
@@ -95,4 +96,5 @@
     <script src="{{ url_for('static', filename='script.js') }}"></script>
     <script src="{{ url_for('static', filename='ai-background.js') }}"></script>
 </body>
-</html> 
+
+</html>
