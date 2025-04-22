@@ -20,11 +20,17 @@ document.addEventListener('DOMContentLoaded', function () {
     // Visual effects on feature options
     featureItems.forEach(item => {
         item.addEventListener('click', function () {
-            featureItems.forEach(i => i.classList.remove('active'));
-            this.classList.add('active');
-
             // Get the selected feature
             const feature = this.getAttribute('data-feature');
+            
+            // Si ya está seleccionada la misma característica, no hacer nada
+            if (feature === currentFeature) {
+                return;
+            }
+            
+            // Actualizar las clases y el estado
+            featureItems.forEach(i => i.classList.remove('active'));
+            this.classList.add('active');
             currentFeature = feature;
 
             // Clear input
@@ -43,7 +49,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 case 'document-analysis':
                     instructionText = "You've selected Document Analysis. Upload a legal document or paste its text here, and I'll provide an analysis highlighting key points, potential issues, and plain language explanations.";
                     uploadButton.style.display = 'flex';
-                    userInput.placeholder = "Paste document text or upload a file...";
+                    // Usar placeholder más corto en móviles
+                    if (window.innerWidth <= 768) {
+                        userInput.placeholder = "Paste text or upload file...";
+                    } else {
+                        userInput.placeholder = "Paste document text or upload a file...";
+                    }
                     break;
 
                 case 'legal-templates':
@@ -101,6 +112,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 // Add a message showing the uploaded file
                 addUserMessage(`Uploaded document: ${fileName}`);
 
+                // Show document processing message
+                addSystemMessage("Processing document. This may take a few seconds...");
+                
                 // Show typing indicator
                 showTypingIndicator();
 
@@ -126,6 +140,13 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
 
                     const data = await response.json();
+                    
+                    // Replace the processing message with the actual analysis
+                    const processingMessage = document.querySelector('.message.system:nth-last-child(2)');
+                    if (processingMessage) {
+                        processingMessage.remove();
+                    }
+                    
                     addSystemMessage(data.response);
 
                     // Reset file input
@@ -134,6 +155,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 } catch (error) {
                     removeTypingIndicator();
                     console.error('Error:', error);
+                    
+                    // Replace the processing message with error message
+                    const processingMessage = document.querySelector('.message.system:nth-last-child(2)');
+                    if (processingMessage) {
+                        processingMessage.remove();
+                    }
+                    
                     addSystemMessage('Sorry, there was an error analyzing your document. Please try again.');
                     fileInput.value = '';
                 }
@@ -288,7 +316,10 @@ document.addEventListener('DOMContentLoaded', function () {
     function addSystemMessage(content) {
         const now = new Date();
         const timeString = formatDate(now);
-
+    
+        // Usar marked.js para convertir markdown a HTML
+        const formattedContent = marked.parse(content);
+    
         const messageHTML = `
             <div class="message system">
                 <div class="message-header">
@@ -296,7 +327,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     <span class="timestamp">${timeString}</span>
                 </div>
                 <div class="message-content">
-                    <p>${content}</p>
+                    <div>${formattedContent}</div>
                 </div>
             </div>
         `;

@@ -13,6 +13,7 @@
         rel="stylesheet">
     <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 
 <body>
@@ -21,6 +22,10 @@
             <div class="logo">
                 <h1>LEGAL<span>GUARDIAN</span></h1>
                 <p class="subtitle-text">Advanced Legal Assistant System</p>
+            </div>
+            <div class="ai-status">
+                <span class="status-dot"></span>
+                <span>AI Active</span>
             </div>
         </header>
 
@@ -33,7 +38,7 @@
                     <div class="feature-list">
                         <div class="feature-item glass-item active" data-feature="legal-consult">
                             <i class="fas fa-balance-scale"></i>
-                            <span>AI Legal Consultation</span>
+                            <span>Legal Consultation</span>
                         </div>
                         <div class="feature-item glass-item" data-feature="document-analysis">
                             <i class="fas fa-file-contract"></i>
@@ -41,12 +46,8 @@
                         </div>
                         <div class="feature-item glass-item" data-feature="legal-templates">
                             <i class="fas fa-file-signature"></i>
-                            <span>Legal Document Templates</span>
+                            <span>Document Templates</span>
                         </div>
-                    </div>
-                    <div class="ai-status">
-                        <span class="status-dot"></span>
-                        <span>AI Active</span>
                     </div>
                     <div class="panel-footer">
                         <div class="tech-badge">
