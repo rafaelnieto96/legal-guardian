@@ -15,7 +15,6 @@
     --text-color: #ffffff;
     --text-light: #e0e8f0;
 
-    /* Glassmorphism variables */
     --glass-bg: rgba(25, 118, 210, 0.4);
     --glass-border: rgba(255, 255, 255, 0.25);
     --glass-highlight: rgba(25, 118, 210, 0.3);
@@ -66,7 +65,6 @@ canvas {
     z-index: -1 !important;
 }
 
-/* Glassmorphism Styles */
 .glass-panel {
     background: var(--glass-bg);
     backdrop-filter: blur(var(--glass-blur));
@@ -140,7 +138,6 @@ canvas {
     box-shadow: 0 5px 15px rgba(255, 140, 0, 0.4);
 }
 
-/* Container and Main Layout */
 .container {
     width: 100%;
     max-width: 1600px;
@@ -153,7 +150,6 @@ canvas {
     flex-direction: column;
 }
 
-/* Header */
 header {
     display: grid;
     grid-template-columns: 1fr auto 1fr;
@@ -214,7 +210,6 @@ header {
     width: 10px;
     height: 10px;
     background-color: #28a745;
-    /* Verde */
     border-radius: 50%;
     display: inline-block;
     position: relative;
@@ -251,7 +246,6 @@ header {
     }
 }
 
-/* Chat Interface */
 .chat-interface {
     flex: 1;
     display: flex;
@@ -267,7 +261,6 @@ header {
     gap: 1.5rem;
 }
 
-/* Side Panel */
 .side-panel {
     width: 280px;
     display: flex;
@@ -308,7 +301,6 @@ header {
     width: 100%;
 }
 
-/* Asegurar que el texto ocupe el espacio restante uniformemente */
 .feature-item span {
     flex: 1;
     white-space: nowrap;
@@ -360,7 +352,6 @@ header {
     color: var(--accent-color);
 }
 
-/* Main Chat */
 .main-chat {
     flex: 1;
     display: flex;
@@ -452,7 +443,6 @@ header {
     border-right: 3px solid var(--primary-light);
 }
 
-/* Chat Input Area */
 .chat-input-area {
     background-color: rgba(6, 52, 97, 0.5);
     backdrop-filter: blur(var(--glass-blur));
@@ -546,7 +536,6 @@ header {
     box-shadow: 0 0 15px rgba(255, 140, 0, 0.5);
 }
 
-/* Typing Indicator */
 .typing-indicator {
     display: flex;
     align-items: center;
@@ -601,7 +590,6 @@ header {
     }
 }
 
-/* Scrollbar */
 ::-webkit-scrollbar {
     width: 6px;
 }
@@ -619,12 +607,10 @@ header {
     background: var(--accent-light);
 }
 
-/* Add this to handle long text in the single-line input */
 #user-input::-webkit-scrollbar-x {
     height: 4px;
 }
 
-/* AI Status styling */
 .ai-status {
     display: flex;
     align-items: center;
@@ -642,7 +628,6 @@ header {
     justify-self: end;
 }
 
-/* Responsive */
 @media (max-width: 1200px) {
     .container {
         padding: 1rem;
@@ -715,7 +700,7 @@ header {
         font-size: 0.9rem;
         min-width: max-content;
     }
-    
+
     .ai-status {
         display: none;
     }
@@ -758,12 +743,12 @@ header {
     .subtitle-text {
         font-size: 0.85rem;
     }
-    
+
     .feature-list {
         padding: 0.6rem;
         gap: 0.5rem;
     }
-    
+
     .feature-item {
         padding: 0.6rem 0.8rem;
         font-size: 0.85rem;
@@ -788,7 +773,6 @@ header {
     }
 }
 
-/* Adjustments for very small screens */
 @media (max-width: 480px) {
     .logo h1 {
         font-size: 1.8rem;
@@ -803,7 +787,7 @@ header {
         padding: 0.5rem;
         gap: 0.5rem;
     }
-    
+
     .feature-item {
         padding: 0.6rem 0.8rem;
         font-size: 0.8rem;
@@ -813,7 +797,7 @@ header {
         align-items: center;
         justify-content: flex-start;
     }
-    
+
     .feature-item i {
         margin-right: 0.4rem;
         font-size: 0.9rem;
@@ -844,7 +828,6 @@ header {
     color: var(--accent-color);
 }
 
-/* For mobile view - convert feature list to vertical stack */
 @media (max-width: 768px) {
     .feature-list {
         flex-direction: column;
@@ -854,7 +837,7 @@ header {
         overflow-x: hidden;
         width: 100%;
     }
-    
+
     .feature-item {
         flex-shrink: 0;
         width: 100%;
@@ -865,47 +848,43 @@ header {
         align-items: center;
         justify-content: flex-start;
     }
-    
+
     .side-panel {
         margin-bottom: 0.6rem;
         padding-bottom: 0.1rem;
     }
-    
-    /* Reduce vertical height of side panel */
+
     .panel-header {
         padding: 0.5rem 0.75rem;
     }
-    
-    /* Make header more compact */
+
     .logo h1 {
         font-size: 1.8rem;
         margin-bottom: 0;
     }
-    
+
     .subtitle-text {
         font-size: 0.8rem;
     }
-    
+
     header {
         padding: 0.75rem;
         margin-bottom: 0.75rem;
     }
 }
 
-/* For even smaller screens make everything even more compact */
 @media (max-width: 480px) {
     .feature-item {
         padding: 0.4rem 0.6rem;
         font-size: 0.85rem;
     }
-    
+
     .feature-list {
         padding: 0.4rem;
         gap: 0.3rem;
     }
 }
 
-/* Añadir esto al archivo style.css */
 .message-content h2 {
     font-size: 1.2rem;
     font-weight: 600;
