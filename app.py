@@ -31,9 +31,15 @@ legal_consultation_template = """
 You are an expert legal assistant. Your task is to respond to legal questions in a clear, precise, and professional manner.
 Maintain a formal but accessible tone, and always cite relevant laws or regulations when possible.
 
+Format your response using proper Markdown:
+- Use headers (## and ###) for sections
+- Use bullet points or numbered lists for listing items
+- Use **bold** or *italic* for emphasis
+- Organize complex information into well-structured sections
+
 User's legal query: {query}
 
-Response:
+Response (in markdown format):
 """
 
 # Template for document chunk analysis
@@ -41,9 +47,15 @@ document_chunk_analysis_template = """
 You are a legal document analyst. Review the following document chunk and extract key legal information.
 This is chunk {chunk_num} of {total_chunks} from the document.
 
+Use proper Markdown formatting in your response:
+- Use headers (## and ###) for sections
+- Use bullet lists or numbered lists for listing items
+- Use **bold** for key terms or important provisions
+- Format any citations or references properly
+
 Document chunk: {document_chunk}
 
-Key information from this chunk (focus only on what's contained in this chunk):
+Key information from this chunk (focus only on what's contained in this chunk, using markdown formatting):
 """
 
 # Template for document final analysis
@@ -134,32 +146,32 @@ def chat():
            except Exception as chain_error:
                print(f"Error in consultation chain: {str(chain_error)}")
                print(traceback.format_exc())
-               # Mensaje genérico sin detalles técnicos
+               # Generic message without technical details
                return jsonify({'response': 'Sorry, I encountered an issue answering your legal question. Please try again or rephrase your question.'}), 200
            return jsonify({'response': response_content})
        
        elif feature == 'document-analysis':
            print("Processing document analysis")
            try:
-               # Comprobar primero si el documento completo cabe en 120k caracteres
+               # Check if the full document fits within 120k characters
                if len(message) <= 120000:
-                   # Si cabe, procesarlo directamente sin chunking
+                   # If it fits, process it directly without chunking
                    print("Document fits within 120k characters, processing as a whole")
                    response = final_analysis_chain.invoke({"document_key_info": message})
                    response_content = response.content if hasattr(response, 'content') else str(response)
                else:
-                   # Si no cabe, usar el chunking
+                   # If not, use chunking
                    print("Document exceeds 120k characters, splitting into chunks")
                    chunks = text_splitter.split_text(message)
                    print(f"Split document into {len(chunks)} chunks")
                    
                    if len(chunks) == 1:
-                       # En caso de que el chunking resulte en un solo chunk
+                       # If chunking results in a single chunk
                        print("Document split into one chunk")
                        response = final_analysis_chain.invoke({"document_key_info": chunks[0]})
                        response_content = response.content if hasattr(response, 'content') else str(response)
                    else:
-                       # Procesar múltiples chunks
+                       # Process multiple chunks
                        print(f"Processing {len(chunks)} chunks")
                        chunk_analyses = []
                        for i, chunk in enumerate(chunks):
@@ -172,7 +184,7 @@ def chat():
                            chunk_content = chunk_analysis.content if hasattr(chunk_analysis, 'content') else str(chunk_analysis)
                            chunk_analyses.append(chunk_content)
                        
-                       # Combinar análisis
+                       # Combine analyses
                        print("Combining chunk analyses and generating final analysis")
                        combined_analysis = "\n\n".join(chunk_analyses)
                        response = final_analysis_chain.invoke({"document_key_info": combined_analysis})
@@ -197,7 +209,7 @@ def chat():
            except Exception as template_error:
                print(f"Error in template generation: {str(template_error)}")
                print(traceback.format_exc())
-               # Mensaje genérico sin detalles técnicos
+               # Generic message without technical details
                return jsonify({'response': 'Sorry, I encountered an issue creating this template. Please try a different template type or check your request.'}), 200
                
            return jsonify({
@@ -214,7 +226,7 @@ def chat():
        error_traceback = traceback.format_exc()
        print(f"Unhandled error in /api/chat: {str(e)}")
        print(error_traceback)
-       # Mensaje genérico sin detalles técnicos
+       # Generic message without technical details
        return jsonify({'response': 'Sorry, an unexpected error occurred. Please try again.'}), 200
 
 @app.route('/api/document-upload', methods=['POST'])
@@ -273,25 +285,25 @@ def document_upload():
                os.remove(file_path)
                print(f"Temporary file {file_path} removed")
        
-       # Comprobar primero si el documento completo cabe en 120k caracteres
+       # Check if the full document fits within 120k characters
        if len(content) <= 120000:
-           # Si cabe, procesarlo directamente sin chunking
+           # If it fits, process it directly without chunking
            print("Document fits within 120k characters, processing as a whole")
            response = final_analysis_chain.invoke({"document_key_info": content})
            response_content = response.content if hasattr(response, 'content') else str(response)
        else:
-           # Si no cabe, usar el chunking
+           # If not, use chunking
            print("Document exceeds 120k characters, splitting into chunks")
            chunks = text_splitter.split_text(content)
            print(f"Document split into {len(chunks)} chunks")
            
            if len(chunks) == 1:
-               # En caso de que el chunking resulte en un solo chunk
+               # If chunking results in a single chunk
                print("Document split into one chunk")
                response = final_analysis_chain.invoke({"document_key_info": chunks[0]})
                response_content = response.content if hasattr(response, 'content') else str(response)
            else:
-               # Procesar múltiples chunks
+               # Process multiple chunks
                print("Processing multiple chunks")
                chunk_analyses = []
                for i, chunk in enumerate(chunks):
@@ -304,7 +316,7 @@ def document_upload():
                    chunk_content = chunk_analysis.content if hasattr(chunk_analysis, 'content') else str(chunk_analysis)
                    chunk_analyses.append(chunk_content)
                
-               # Combinar análisis
+               # Combine analyses
                print("Combining chunk analyses for final analysis")
                combined_analysis = "\n\n".join(chunk_analyses)
                response = final_analysis_chain.invoke({"document_key_info": combined_analysis})
@@ -317,7 +329,7 @@ def document_upload():
        error_traceback = traceback.format_exc()
        print(f"Unhandled error in /api/document-upload: {str(e)}")
        print(error_traceback)
-       # Mensaje genérico sin detalles técnicos
+       # Generic message without technical details
        return jsonify({'response': 'Sorry, I encountered an issue processing your document. Please try again with a different document or format.'}), 200
 
 @app.route('/api/download-template', methods=['POST'])
@@ -354,7 +366,7 @@ def download_template():
        error_traceback = traceback.format_exc()
        print(f"Unhandled error in /api/download-template: {str(e)}")
        print(error_traceback)
-       # Mensaje genérico sin detalles técnicos
+       # Generic message without technical details
        return jsonify({'response': 'Sorry, I encountered an issue creating your template document. Please try again later.'}), 200
 
 if __name__ == '__main__':
