@@ -382,4 +382,4 @@ def download_template():
 
 if __name__ == '__main__':
    print("Starting Flask server on port 5002")
-   app.run(debug=True, port=5002)
+   app.run()
