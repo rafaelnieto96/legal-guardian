@@ -62,6 +62,13 @@ document.addEventListener('DOMContentLoaded', function () {
     userInput.addEventListener('input', function () {
         this.style.height = '42px';
 
+        if (this.value.length === 0) {
+            this.style.height = '42px';
+            this.style.overflowY = 'hidden';
+            this.scrollTop = 0;
+            return;
+        }
+
         const newHeight = Math.min(this.scrollHeight, 120);
         this.style.height = newHeight + 'px';
 
@@ -69,10 +76,6 @@ document.addEventListener('DOMContentLoaded', function () {
             this.style.overflowY = 'auto';
         } else {
             this.style.overflowY = 'hidden';
-        }
-
-        if (this.value.length === 0) {
-            this.scrollTop = 0;
         }
     });
 

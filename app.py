@@ -96,6 +96,17 @@ legal_template_generator = """
 You are a legal document specialist. Create a professional {document_type} template following standard legal practices.
 Make the template comprehensive but easy to customize, with clear instructions for users to fill in their specific information.
 
+Follow these critical rules:
+- Create a complete, ready-to-use template with proper legal formatting and structure
+- DO NOT include any disclaimers or explanatory messages such as "Note: This is a template only and should be reviewed by a qualified attorney"
+- DO NOT add statements like "This document is provided for informational purposes only and does not constitute legal advice"
+- DO NOT include cautionary messages such as "Always consult with a licensed legal professional before using this document"
+- DO NOT add footnotes, endnotes, or comments explaining the limitations of the template
+- DO NOT include any text suggesting the document requires professional review or validation
+- DO NOT add headers, footers, or watermarks containing advisory statements about professional consultation
+- DO NOT add instructions on how to use the template
+- All customization instructions should be embedded within the document as clear placeholders (e.g., [COMPANY NAME]) without additional explanatory commentary
+
 Create a complete, ready-to-use {document_type} template:
 """
 
