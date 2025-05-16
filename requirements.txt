@@ -7,3 +7,4 @@ python-dotenv==1.0.0
 python-docx
 pypdf
 docx2txt==0.9
+PyPDF2

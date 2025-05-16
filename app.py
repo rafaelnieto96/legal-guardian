@@ -20,26 +20,34 @@ app = Flask(__name__)
 cohere_api_key = os.getenv('COHERE_API_KEY')
 co = cohere.Client(cohere_api_key)
 
+# Constants for chunking
+MAX_INPUT_TOKENS = 3500  # Reserve space for prompt context
+MAX_CHUNK_LENGTH = 15000  # Conservative character estimate per chunk
+
 # Función para dividir texto en chunks
-def split_text(text, chunk_size=32000, chunk_overlap=500):
+def split_text(text, max_length=MAX_CHUNK_LENGTH):
+    """Split text into chunks of approximately max_length characters"""
+    # If text is short enough, return it as a single chunk
+    if len(text) <= max_length:
+        return [text]
+    
     chunks = []
-    if len(text) <= chunk_size:
-        chunks.append(text)
-    else:
-        start = 0
-        while start < len(text):
-            end = min(start + chunk_size, len(text))
-            if end < len(text) and end - start < chunk_size:
-                # Find the last period or newline to end the chunk cleanly
-                last_period = text.rfind('.', start, end)
-                last_newline = text.rfind('\n', start, end)
-                split_point = max(last_period, last_newline)
-                
-                if split_point > start + chunk_size - chunk_overlap:
-                    end = split_point + 1
-                
-            chunks.append(text[start:end])
-            start = end - chunk_overlap if end - start > chunk_overlap else end
+    # Split text by paragraphs
+    paragraphs = text.split('\n')
+    current_chunk = ""
+    
+    for paragraph in paragraphs:
+        # If adding this paragraph would exceed the max length, 
+        # save the current chunk and start a new one
+        if len(current_chunk) + len(paragraph) + 1 > max_length and current_chunk:
+            chunks.append(current_chunk)
+            current_chunk = paragraph + '\n'
+        else:
+            current_chunk += paragraph + '\n'
+    
+    # Add the last chunk if it has content
+    if current_chunk:
+        chunks.append(current_chunk)
     
     return chunks
 
@@ -210,38 +218,27 @@ def chat():
         elif feature == 'document-analysis':
             print("Processing document analysis")
             try:
-                # Check if the full document fits within 120k characters
-                if len(message) <= 120000:
-                    # If it fits, process it directly without chunking
-                    print("Document fits within 120k characters, processing as a whole")
-                    response_content = get_final_analysis(message)
-                else:
-                    # If not, use chunking
-                    print("Document exceeds 120k characters, splitting into chunks")
-                    chunks = split_text(message)
-                    print(f"Split document into {len(chunks)} chunks")
-                    
-                    if len(chunks) == 1:
-                        # If chunking results in a single chunk
-                        print("Document split into one chunk")
-                        response_content = get_final_analysis(chunks[0])
-                    else:
-                        # Process multiple chunks
-                        print(f"Processing {len(chunks)} chunks")
-                        chunk_analyses = []
-                        for i, chunk in enumerate(chunks):
-                            print(f"Processing chunk {i+1}/{len(chunks)}")
-                            chunk_content = get_chunk_analysis(
-                                chunk,
-                                i+1,
-                                len(chunks)
-                            )
-                            chunk_analyses.append(chunk_content)
-                        
-                        # Combine analyses
-                        print("Combining chunk analyses and generating final analysis")
-                        combined_analysis = "\n\n".join(chunk_analyses)
-                        response_content = get_final_analysis(combined_analysis)
+                # Always use chunking for document analysis
+                print("Splitting document into chunks")
+                chunks = split_text(message)
+                print(f"Document split into {len(chunks)} chunks")
+                
+                # Process multiple chunks
+                print("Processing chunks")
+                chunk_analyses = []
+                for i, chunk in enumerate(chunks):
+                    print(f"Processing chunk {i+1}/{len(chunks)}")
+                    chunk_content = get_chunk_analysis(
+                        chunk,
+                        i+1,
+                        len(chunks)
+                    )
+                    chunk_analyses.append(chunk_content)
+                
+                # Combine analyses
+                print("Combining chunk analyses for final analysis")
+                combined_analysis = "\n\n".join(chunk_analyses)
+                response_content = get_final_analysis(combined_analysis)
                 
                 print(f"Analysis response generated: {response_content[:100]}...")
                 
@@ -335,38 +332,27 @@ def document_upload():
                 os.remove(file_path)
                 print(f"Temporary file {file_path} removed")
         
-        # Check if the full document fits within 120k characters
-        if len(content) <= 120000:
-            # If it fits, process it directly without chunking
-            print("Document fits within 120k characters, processing as a whole")
-            response_content = get_final_analysis(content)
-        else:
-            # If not, use chunking
-            print("Document exceeds 120k characters, splitting into chunks")
-            chunks = split_text(content)
-            print(f"Document split into {len(chunks)} chunks")
-            
-            if len(chunks) == 1:
-                # If chunking results in a single chunk
-                print("Document split into one chunk")
-                response_content = get_final_analysis(chunks[0])
-            else:
-                # Process multiple chunks
-                print("Processing multiple chunks")
-                chunk_analyses = []
-                for i, chunk in enumerate(chunks):
-                    print(f"Processing chunk {i+1}/{len(chunks)}")
-                    chunk_content = get_chunk_analysis(
-                        chunk,
-                        i+1,
-                        len(chunks)
-                    )
-                    chunk_analyses.append(chunk_content)
-                
-                # Combine analyses
-                print("Combining chunk analyses for final analysis")
-                combined_analysis = "\n\n".join(chunk_analyses)
-                response_content = get_final_analysis(combined_analysis)
+        # ALWAYS use chunking regardless of document size
+        print("Splitting document into chunks")
+        chunks = split_text(content)
+        print(f"Document split into {len(chunks)} chunks")
+        
+        # Process chunks
+        print("Processing chunks")
+        chunk_analyses = []
+        for i, chunk in enumerate(chunks):
+            print(f"Processing chunk {i+1}/{len(chunks)}")
+            chunk_content = get_chunk_analysis(
+                chunk,
+                i+1,
+                len(chunks)
+            )
+            chunk_analyses.append(chunk_content)
+        
+        # Combine analyses
+        print("Combining chunk analyses for final analysis")
+        combined_analysis = "\n\n".join(chunk_analyses)
+        response_content = get_final_analysis(combined_analysis)
         
         print(f"Final analysis response generated: {response_content[:100]}...")
         return jsonify({'response': response_content})
