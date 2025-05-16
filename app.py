@@ -3,22 +3,28 @@ from docx import Document
 import cohere
 import os
 import tempfile
-import io
 import traceback
 from dotenv import load_dotenv
 import re
+import sys
+import time
 
 # For document loading
 from PyPDF2 import PdfReader
 import docx2txt
 
+# Load environment variables
 load_dotenv()
 
 app = Flask(__name__)
 
 # Cohere configuration - usando cliente directo
 cohere_api_key = os.getenv('COHERE_API_KEY')
-co = cohere.Client(cohere_api_key)
+if not cohere_api_key:
+    print("Error: No COHERE_API_KEY found in environment variables.")
+    print("Please create a .env file with your Cohere API key.")
+else:
+    co = cohere.Client(cohere_api_key)
 
 # Constants for chunking
 MAX_INPUT_TOKENS = 3500  # Reserve space for prompt context
@@ -141,9 +147,9 @@ def get_consultation_response(query):
     prompt = legal_consultation_template.format(query=query)
     response = co.generate(
         prompt=prompt,
-        model="command",
-        temperature=0.0,
-        max_tokens=2048
+        temperature=0.1,
+        max_tokens=1024,
+        return_likelihoods='NONE'
     )
     return response.generations[0].text
 
@@ -155,9 +161,9 @@ def get_chunk_analysis(document_chunk, chunk_num, total_chunks):
     )
     response = co.generate(
         prompt=prompt,
-        model="command",
-        temperature=0.0,
-        max_tokens=2048
+        temperature=0.1,
+        max_tokens=1024,
+        return_likelihoods='NONE'
     )
     return response.generations[0].text
 
@@ -165,9 +171,9 @@ def get_final_analysis(document_key_info):
     prompt = document_final_analysis_template.format(document_key_info=document_key_info)
     response = co.generate(
         prompt=prompt,
-        model="command",
-        temperature=0.0,
-        max_tokens=2048
+        temperature=0.1,
+        max_tokens=1024,
+        return_likelihoods='NONE'
     )
     return response.generations[0].text
 
@@ -175,9 +181,9 @@ def get_template(document_type):
     prompt = legal_template_generator.format(document_type=document_type)
     response = co.generate(
         prompt=prompt,
-        model="command",
-        temperature=0.0,
-        max_tokens=4096
+        temperature=0.1,
+        max_tokens=1024,
+        return_likelihoods='NONE'
     )
     return response.generations[0].text
 
@@ -185,6 +191,22 @@ def get_template(document_type):
 def index():
     print("Loading index page")
     return render_template('index.html')
+
+@app.route('/status', methods=['GET'])
+def status():
+    """Simple endpoint to check API connectivity"""
+    try:
+        response = co.generate(
+            prompt="Hello",
+            temperature=0.1,
+            max_tokens=5,
+            return_likelihoods='NONE'
+        )
+        return f"API connection working! Response: {response.generations[0].text}"
+    except Exception as e:
+        error_message = f"API connection error: {str(e)}"
+        print(error_message, file=sys.stderr)
+        return error_message
 
 @app.route('/api/chat', methods=['POST'])
 def chat():
@@ -252,20 +274,27 @@ def chat():
         elif feature == 'legal-templates':
             print("Processing legal template generation")
             try:
-                # Generate the template based on the requested type
+                print(f"Attempting to generate template for: '{message}'")
+                
                 template_content = get_template(message)
                 print(f"Template generated for '{message}'")
+                
+                response_data = {
+                    'response': f"I've created a {message} template for you. You can use this as a starting point and customize it to your specific needs.",
+                    'template': template_content,
+                    'templateType': message
+                }
+                
+                return jsonify(response_data)
+                
             except Exception as template_error:
-                print(f"Error in template generation: {str(template_error)}")
+                print(f"ERROR IN TEMPLATE GENERATION: {str(template_error)}")
+                print(f"Error type: {type(template_error).__name__}")
+                print(f"Template type requested: '{message}'")
                 print(traceback.format_exc())
+                
                 # Generic message without technical details
                 return jsonify({'response': 'Sorry, I encountered an issue creating this template. Please try a different template type or check your request.'}), 200
-                
-            return jsonify({
-                'response': f"I've created a {message} template for you. You can use this as a starting point and customize it to your specific needs.",
-                'template': template_content,
-                'templateType': message
-            })
         
         else:
             print(f"Invalid feature specified: {feature}")
@@ -402,5 +431,5 @@ def download_template():
         return jsonify({'response': 'Sorry, I encountered an issue creating your template document. Please try again later.'}), 200
 
 if __name__ == '__main__':
-    print("Starting Flask server")
-    app.run()
+    port = int(os.getenv('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
