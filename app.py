@@ -1,6 +1,5 @@
 from flask import Flask, render_template, request, jsonify, send_file
 from docx import Document
-import cohere
 import os
 import tempfile
 import traceback
@@ -8,6 +7,8 @@ from dotenv import load_dotenv
 import re
 import sys
 import time
+import requests
+import json
 
 # For document loading
 from PyPDF2 import PdfReader
@@ -18,13 +19,11 @@ load_dotenv()
 
 app = Flask(__name__)
 
-# Cohere configuration - usando cliente directo
+# Cohere configuration
 cohere_api_key = os.getenv('COHERE_API_KEY')
 if not cohere_api_key:
     print("Error: No COHERE_API_KEY found in environment variables.")
     print("Please create a .env file with your Cohere API key.")
-else:
-    co = cohere.Client(cohere_api_key)
 
 # Constants for chunking
 MAX_INPUT_TOKENS = 3500  # Reserve space for prompt context
@@ -36,25 +35,25 @@ def split_text(text, max_length=MAX_CHUNK_LENGTH):
     # If text is short enough, return it as a single chunk
     if len(text) <= max_length:
         return [text]
-    
+
     chunks = []
     # Split text by paragraphs
     paragraphs = text.split('\n')
     current_chunk = ""
-    
+
     for paragraph in paragraphs:
-        # If adding this paragraph would exceed the max length, 
+        # If adding this paragraph would exceed the max length,
         # save the current chunk and start a new one
         if len(current_chunk) + len(paragraph) + 1 > max_length and current_chunk:
             chunks.append(current_chunk)
             current_chunk = paragraph + '\n'
         else:
             current_chunk += paragraph + '\n'
-    
+
     # Add the last chunk if it has content
     if current_chunk:
         chunks.append(current_chunk)
-    
+
     return chunks
 
 # Templates
@@ -142,50 +141,151 @@ Follow these critical rules:
 Create a complete, ready-to-use {document_type} template:
 """
 
-# Funciones auxiliares para generar respuestas usando Cohere directamente
+# Funciones auxiliares para generar respuestas usando Cohere API directamente
 def get_consultation_response(query):
-    prompt = legal_consultation_template.format(query=query)
-    response = co.generate(
-        prompt=prompt,
-        temperature=0.1,
-        max_tokens=1024,
-        return_likelihoods='NONE'
-    )
-    return response.generations[0].text
+    try:
+        api_key = os.getenv('COHERE_API_KEY')
+        
+        headers = {
+            'Authorization': f'Bearer {api_key}',
+            'Content-Type': 'application/json'
+        }
+        
+        prompt = legal_consultation_template.format(query=query)
+        
+        payload = {
+            "model": "command-r",
+            "messages": [{"role": "user", "content": prompt}],
+            "max_tokens": 1024,
+            "temperature": 0.1
+        }
+        
+        response = requests.post(
+            'https://api.cohere.ai/v2/chat',
+            headers=headers,
+            json=payload,
+            timeout=30
+        )
+        
+        if response.status_code == 200:
+            result = response.json()
+            return result['message']['content'][0]['text']
+        else:
+            print(f"Error {response.status_code}: {response.text}")
+            return "Lo siento, ocurrió un error al procesar tu consulta."
+            
+    except Exception as e:
+        print(f"Error en consulta: {str(e)}")
+        return "Lo siento, ocurrió un error al procesar tu consulta."
 
 def get_chunk_analysis(document_chunk, chunk_num, total_chunks):
-    prompt = document_chunk_analysis_template.format(
-        document_chunk=document_chunk,
-        chunk_num=chunk_num,
-        total_chunks=total_chunks
-    )
-    response = co.generate(
-        prompt=prompt,
-        temperature=0.1,
-        max_tokens=1024,
-        return_likelihoods='NONE'
-    )
-    return response.generations[0].text
+    try:
+        api_key = os.getenv('COHERE_API_KEY')
+        
+        headers = {
+            'Authorization': f'Bearer {api_key}',
+            'Content-Type': 'application/json'
+        }
+        
+        prompt = document_chunk_analysis_template.format(
+            document_chunk=document_chunk,
+            chunk_num=chunk_num,
+            total_chunks=total_chunks
+        )
+        
+        payload = {
+            "model": "command-r",
+            "messages": [{"role": "user", "content": prompt}],
+            "max_tokens": 1024,
+            "temperature": 0.1
+        }
+        
+        response = requests.post(
+            'https://api.cohere.ai/v2/chat',
+            headers=headers,
+            json=payload,
+            timeout=30
+        )
+        
+        if response.status_code == 200:
+            result = response.json()
+            return result['message']['content'][0]['text']
+        else:
+            return f"Error procesando chunk {chunk_num}"
+            
+    except Exception as e:
+        print(f"Error en análisis de chunk: {str(e)}")
+        return f"Error procesando chunk {chunk_num}"
 
 def get_final_analysis(document_key_info):
-    prompt = document_final_analysis_template.format(document_key_info=document_key_info)
-    response = co.generate(
-        prompt=prompt,
-        temperature=0.1,
-        max_tokens=1024,
-        return_likelihoods='NONE'
-    )
-    return response.generations[0].text
+    try:
+        api_key = os.getenv('COHERE_API_KEY')
+        
+        headers = {
+            'Authorization': f'Bearer {api_key}',
+            'Content-Type': 'application/json'
+        }
+        
+        prompt = document_final_analysis_template.format(document_key_info=document_key_info)
+        
+        payload = {
+            "model": "command-r",
+            "messages": [{"role": "user", "content": prompt}],
+            "max_tokens": 1024,
+            "temperature": 0.1
+        }
+        
+        response = requests.post(
+            'https://api.cohere.ai/v2/chat',
+            headers=headers,
+            json=payload,
+            timeout=30
+        )
+        
+        if response.status_code == 200:
+            result = response.json()
+            return result['message']['content'][0]['text']
+        else:
+            return "Error en análisis final"
+            
+    except Exception as e:
+        print(f"Error en análisis final: {str(e)}")
+        return "Error en análisis final"
 
 def get_template(document_type):
-    prompt = legal_template_generator.format(document_type=document_type)
-    response = co.generate(
-        prompt=prompt,
-        temperature=0.1,
-        max_tokens=1024,
-        return_likelihoods='NONE'
-    )
-    return response.generations[0].text
+    try:
+        api_key = os.getenv('COHERE_API_KEY')
+        
+        headers = {
+            'Authorization': f'Bearer {api_key}',
+            'Content-Type': 'application/json'
+        }
+        
+        prompt = legal_template_generator.format(document_type=document_type)
+        
+        payload = {
+            "model": "command-r",
+            "messages": [{"role": "user", "content": prompt}],
+            "max_tokens": 1024,
+            "temperature": 0.1
+        }
+        
+        response = requests.post(
+            'https://api.cohere.ai/v2/chat',
+            headers=headers,
+            json=payload,
+            timeout=30
+        )
+        
+        if response.status_code == 200:
+            result = response.json()
+            return result['message']['content'][0]['text']
+        else:
+            return "Error generando template"
+            
+    except Exception as e:
+        print(f"Error generando template: {str(e)}")
+        return "Error generando template"
 
 @app.route('/')
 def index():
@@ -196,17 +296,34 @@ def index():
 def status():
     """Simple endpoint to check API connectivity"""
     try:
-        response = co.generate(
-            prompt="Hello",
-            temperature=0.1,
-            max_tokens=5,
-            return_likelihoods='NONE'
+        api_key = os.getenv('COHERE_API_KEY')
+        
+        headers = {
+            'Authorization': f'Bearer {api_key}',
+            'Content-Type': 'application/json'
+        }
+        
+        payload = {
+            "model": "command-r",
+            "messages": [{"role": "user", "content": "Hello"}],
+            "max_tokens": 5
+        }
+        
+        response = requests.post(
+            'https://api.cohere.ai/v2/chat',
+            headers=headers,
+            json=payload,
+            timeout=10
         )
-        return f"API connection working! Response: {response.generations[0].text}"
+        
+        if response.status_code == 200:
+            result = response.json()
+            return f"API connection working! Response: {result['message']['content'][0]['text']}"
+        else:
+            return f"API error: {response.status_code} - {response.text}"
+            
     except Exception as e:
-        error_message = f"API connection error: {str(e)}"
-        print(error_message, file=sys.stderr)
-        return error_message
+        return f"API connection error: {str(e)}"
 
 @app.route('/api/chat', methods=['POST'])
 def chat():
@@ -216,14 +333,14 @@ def chat():
         print(f"Request data: {data}")
         message = data.get('message')
         feature = data.get('feature', 'legal-consult')
-        
+
         print(f"Message: {message}")
         print(f"Feature: {feature}")
-        
+
         if not message:
             print("Error: Missing message parameter")
             return jsonify({'error': 'Missing message parameter'}), 400
-        
+
         # Handle different features
         if feature == 'legal-consult':
             print("Processing legal consultation")
@@ -236,7 +353,7 @@ def chat():
                 # Generic message without technical details
                 return jsonify({'response': 'Sorry, I encountered an issue answering your legal question. Please try again or rephrase your question.'}), 200
             return jsonify({'response': response_content})
-        
+
         elif feature == 'document-analysis':
             print("Processing document analysis")
             try:
@@ -244,7 +361,7 @@ def chat():
                 print("Splitting document into chunks")
                 chunks = split_text(message)
                 print(f"Document split into {len(chunks)} chunks")
-                
+
                 # Process multiple chunks
                 print("Processing chunks")
                 chunk_analyses = []
@@ -256,50 +373,50 @@ def chat():
                         len(chunks)
                     )
                     chunk_analyses.append(chunk_content)
-                
+
                 # Combine analyses
                 print("Combining chunk analyses for final analysis")
                 combined_analysis = "\n\n".join(chunk_analyses)
                 response_content = get_final_analysis(combined_analysis)
-                
+
                 print(f"Analysis response generated: {response_content[:100]}...")
-                
+
             except Exception as analysis_error:
                 print(f"Error in document analysis: {str(analysis_error)}")
                 print(traceback.format_exc())
                 return jsonify({'response': 'Sorry, I encountered an issue analyzing this document. Please try again with a different document or format.'}), 200
-            
+
             return jsonify({'response': response_content})
-        
+
         elif feature == 'legal-templates':
             print("Processing legal template generation")
             try:
                 print(f"Attempting to generate template for: '{message}'")
-                
+
                 template_content = get_template(message)
                 print(f"Template generated for '{message}'")
-                
+
                 response_data = {
                     'response': f"I've created a {message} template for you. You can use this as a starting point and customize it to your specific needs.",
                     'template': template_content,
                     'templateType': message
                 }
-                
+
                 return jsonify(response_data)
-                
+
             except Exception as template_error:
                 print(f"ERROR IN TEMPLATE GENERATION: {str(template_error)}")
                 print(f"Error type: {type(template_error).__name__}")
                 print(f"Template type requested: '{message}'")
                 print(traceback.format_exc())
-                
+
                 # Generic message without technical details
                 return jsonify({'response': 'Sorry, I encountered an issue creating this template. Please try a different template type or check your request.'}), 200
-        
+
         else:
             print(f"Invalid feature specified: {feature}")
             return jsonify({'error': 'Invalid feature specified'}), 400
-    
+
     except Exception as e:
         error_traceback = traceback.format_exc()
         print(f"Unhandled error in /api/chat: {str(e)}")
@@ -313,25 +430,25 @@ def document_upload():
     if 'file' not in request.files:
         print("Error: No file part in request")
         return jsonify({'error': 'No file part'}), 400
-    
+
     file = request.files['file']
     print(f"File received: {file.filename}")
-    
+
     if file.filename == '':
         print("Error: No selected file")
         return jsonify({'error': 'No selected file'}), 400
-    
+
     try:
         # Create uploads directory if it doesn't exist
         os.makedirs('uploads', exist_ok=True)
         file_path = os.path.join('uploads', file.filename)
         file.save(file_path)
         print(f"File saved to {file_path}")
-        
+
         # Use specialized document loaders based on file type
         content = ""
         filename = file.filename.lower()
-        
+
         try:
             if filename.endswith('.pdf'):
                 print("Processing PDF file")
@@ -340,13 +457,13 @@ def document_upload():
                 for page in pdf_reader.pages:
                     content += page.extract_text() + "\n"
                 print(f"Extracted {len(pdf_reader.pages)} pages from PDF")
-                    
+
             elif filename.endswith('.docx'):
                 print("Processing DOCX file")
                 # Usamos docx2txt en vez de LangChain loader
                 content = docx2txt.process(file_path)
                 print("DOCX content extracted")
-                    
+
             elif filename.endswith('.txt'):
                 print("Processing TXT file")
                 with open(file_path, 'r', encoding='utf-8', errors='replace') as f:
@@ -360,12 +477,12 @@ def document_upload():
             if os.path.exists(file_path):
                 os.remove(file_path)
                 print(f"Temporary file {file_path} removed")
-        
+
         # ALWAYS use chunking regardless of document size
         print("Splitting document into chunks")
         chunks = split_text(content)
         print(f"Document split into {len(chunks)} chunks")
-        
+
         # Process chunks
         print("Processing chunks")
         chunk_analyses = []
@@ -377,15 +494,15 @@ def document_upload():
                 len(chunks)
             )
             chunk_analyses.append(chunk_content)
-        
+
         # Combine analyses
         print("Combining chunk analyses for final analysis")
         combined_analysis = "\n\n".join(chunk_analyses)
         response_content = get_final_analysis(combined_analysis)
-        
+
         print(f"Final analysis response generated: {response_content[:100]}...")
         return jsonify({'response': response_content})
-        
+
     except Exception as e:
         error_traceback = traceback.format_exc()
         print(f"Unhandled error in /api/document-upload: {str(e)}")
@@ -401,7 +518,7 @@ def download_template():
         print(f"Request data: {data}")
         template_content = data.get('template')
         template_type = data.get('templateType', 'legal_document')
-        
+
         if not template_content:
             print("Error: Missing template content")
             return jsonify({'response': 'Missing template content'}), 200
@@ -416,7 +533,7 @@ def download_template():
         temp_path = tempfile.NamedTemporaryFile(delete=False, suffix=".docx")
         print(f"Saving template to temporary file: {temp_path.name}")
         doc.save(temp_path.name)
-        
+
         return send_file(
             temp_path.name,
             as_attachment=True,
